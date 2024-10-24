@@ -13,8 +13,8 @@ n_manning = 0.03  # Manning's roughness coefficient
 dx = 10  # Space step (m)
 dt = 1    # Time step (s)
 B = 1.5  # channel width (m)
-L = 1000 # Length of the channel (m)
-T = 100  # Simulation time (s)
+L = 500 # Length of the channel (m)
+T = 20  # Simulation time (s)
 n_steps = int(T / dt)  # Number of time steps
 n_grid = int(L / dx)   # Number of grid points
 S0 = 0    # channel bed slope
@@ -24,14 +24,22 @@ Q = np.zeros(n_grid)
 A = h * B
 
 # Boundary conditions
-h[0] = 5  # Upstream water depth (m)
-Q[0] = 3   # Upstream discharge (m^3/s)
-A[0] = h[0] *B
+h_bc = np.ones(n_steps)
+Q_bc = np.zeros(n_steps)
+for i in range(n_steps):
+    h_bc[i] = 5 - i*0.2
+    Q_bc[i] = 3 - i*0.1
+
+A_bc = h_bc*B
 
 def fric_slope (Q, A, h):
     return n_manning**2*Q*abs(Q) / (A**2*h**(4/3))
 
 for n in range(0, n_steps):
+
+    h[0] = h_bc[n]
+    Q[0] = Q_bc[n]
+    A[0] = A_bc[n]
 
     h_new = np.copy(h)
     Q_new = np.copy(Q)
@@ -39,10 +47,7 @@ for n in range(0, n_steps):
 
     for i in range(1, n_grid-1):
 
-        if i == 0:
-            h_new[i] = h[i] - (Q[i+1] - Q[i])/dx*dt/B
-        else:
-            h_new[i] = (h[i+1] + h[i-1])/2 - (Q[i+1] - Q[i-1])/2/dx*dt/B  # Lax-Friedrichs method (central finite difference approximation)
+        h_new[i] = (h[i+1] + h[i-1])/2 - (Q[i+1] - Q[i-1])/2/dx*dt/B  # Lax-Friedrichs method (central finite difference approximation)
 
 #        print(f"h_new[{i}]: {h_new[i]}")
         
@@ -51,17 +56,10 @@ for n in range(0, n_steps):
         #A[i] = A_new[i]
 
         # momentum equation: dQ/dt + d(Q**2/A)/dx + g*A*dh/dx = g*A*(S0-Sf)
-        if i == 0:
-            Sf = fric_slope(Q[i], A[i], h[i])
-            dQ_dx = (Q[i+1]**2/A[i+1] - Q[i]**2/A[i])/dx
-            dh_dx = (h[i+1] - h[i])/dx
-            Q_new[i] = dt*(g*A[i]*(S0-Sf) - dQ_dx - g*A[i]*dh_dx) + Q[i]
-
-        else:
-            Sf = fric_slope(Q[i], A[i], h[i])
-            dQ_dx = (Q[i+1]**2/A[i+1] - Q[i-1]**2/A[i-1])/2/dx    
-            dh_dx = (h[i+1] - h[i-1])/2/dx
-            Q_new[i] = dt*(g*A[i]*(S0-Sf) - dQ_dx - g*A[i]*dh_dx) + (Q[i+1] + Q[i-1])/2    # Lax-Friedrichs method
+        Sf = fric_slope(Q[i], A[i], h[i])
+        dQ_dx = (Q[i+1]**2/A[i+1] - Q[i-1]**2/A[i-1])/2/dx    
+        dh_dx = (h[i+1] - h[i-1])/2/dx
+        Q_new[i] = dt*(g*A[i]*(S0-Sf) - dQ_dx - g*A[i]*dh_dx) + (Q[i+1] + Q[i-1])/2    # Lax-Friedrichs method
         
         #Q[i] = Q_new[i]
 
@@ -80,7 +78,7 @@ for n in range(0, n_steps):
 #    print(f"A for {n}: {A_new}")
 
     # Plot at some time steps
-    if n % 10 == 0:
+    if n % 1 == 0:
         plt.plot(h, label=f'time={n*dt} s')
 
 plt.xlabel('Position along the channel (m)')
