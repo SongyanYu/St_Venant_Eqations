@@ -37,43 +37,33 @@ for n in range(0, n_steps):
     Q_new = np.copy(Q)
     A_new = np.copy(A)
 
-    for i in range(0, n_grid-1):
+    for i in range(1, n_grid-1):
 
-        # Continuity equation: dA/dt + dQ/dx = 0
         if i == 0:
-            h_new[i] = h[i] - dt*(Q[i+1] - Q[i])/dx/B   # forward finite-difference
-#        else:
-#            if i == (n_grid-1):
-#                print('i==n_grid-1')
-#                h_new[i] = h[i] - dt*(Q[i]-Q[i-1])/dx/B   # backward finite-difference
+            h_new[i] = h[i] - (Q[i+1] - Q[i])/dx*dt/B
         else:
             h_new[i] = (h[i+1] + h[i-1])/2 - (Q[i+1] - Q[i-1])/2/dx*dt/B  # Lax-Friedrichs method (central finite difference approximation)
-        
+
 #        print(f"h_new[{i}]: {h_new[i]}")
         
-        h[i] = h_new[i]
+        #h[i] = h_new[i]
         A_new[i] = h_new[i] * B
-        A[i] = A_new[i]
+        #A[i] = A_new[i]
 
         # momentum equation: dQ/dt + d(Q**2/A)/dx + g*A*dh/dx = g*A*(S0-Sf)
         if i == 0:
             Sf = fric_slope(Q[i], A[i], h[i])
             dQ_dx = (Q[i+1]**2/A[i+1] - Q[i]**2/A[i])/dx
-            dh_dx = (h[i+1]-h[i])/dx
+            dh_dx = (h[i+1] - h[i])/dx
             Q_new[i] = dt*(g*A[i]*(S0-Sf) - dQ_dx - g*A[i]*dh_dx) + Q[i]
+
         else:
-#            if  i == n_grid-1:
-#                Sf = fric_slope(Q[i], A[i], h[i])
-#                dQ_dx = (Q[i]**2/A[i] - Q[i-1]**2/A[i-1])/dx
-#                dh_dx = (h[i]-h[i-1])/dx
-#                Q_new[i] = dt*(g*A[i]*(S0-Sf) - dQ_dx - g*A[i]*dh_dx) + Q[i]
-#            else:
-            Sf = fric_slope((Q[i+1]+Q[i-1])/2, (A[i+1]+A[i-1])/2, (h[i+1]+h[i-1])/2)
+            Sf = fric_slope(Q[i], A[i], h[i])
             dQ_dx = (Q[i+1]**2/A[i+1] - Q[i-1]**2/A[i-1])/2/dx    
             dh_dx = (h[i+1] - h[i-1])/2/dx
-            Q_new[i] = dt*(g*(A[i+1]+A[i-1])/2*(S0-Sf) - dQ_dx - g*(A[i+1]+A[i-1])/2*dh_dx) + (Q[i+1] + Q[i-1])/2    # Lax-Friedrichs method
+            Q_new[i] = dt*(g*A[i]*(S0-Sf) - dQ_dx - g*A[i]*dh_dx) + (Q[i+1] + Q[i-1])/2    # Lax-Friedrichs method
         
-        Q[i] = Q_new[i]
+        #Q[i] = Q_new[i]
 
     # Update for next time step
     h_new[-1] = h_new[-2]
