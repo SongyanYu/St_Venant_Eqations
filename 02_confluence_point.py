@@ -17,6 +17,10 @@ dt = 1.0    # Time step (s)
 nx_river1 = 50  # Number of grids
 nx_river2 = 50
 nx_out = 100
+B_river1 = 10  # river width (m)
+B_river2 = 8
+B_out = 15
+S0 = 0    # channel bed slope
 
 # Initialize variables
 A_river1 = np.ones(nx_river1) * 20.0  # Cross-sectional area (m²)
@@ -26,51 +30,25 @@ Q_river2 = np.ones(nx_river2) * 4.0
 A_out = np.ones(nx_out) * 30.0
 Q_out = np.zeros(nx_out)
 
-# Main time-stepping loop
-for t in range(300):  # Run for 300 time steps or more
-    # Update each river section
-    h_river1 = A_river1 / 10.0  # Assume width of 10m
-    h_river2 = A_river2 / 8.0   # Assume width of 8m
-    h_out = A_out / 15.0        # Assume width of 15m
-
-    # Update both rivers separately
-    A_river1, Q_river1 = update_river(A_river1, Q_river1, h_river1, dx, dt, nx_river1)
-    A_river2, Q_river2 = update_river(A_river2, Q_river2, h_river2, dx, dt, nx_river2)
-
-    # Apply confluence/junction conditions
-    Q_out[0] = Q_river1[-1] + Q_river2[-1]
-    h_junction = (h_river1[-1] + h_river2[-1]) / 2  # Average water level at junction
-    A_out[0] = h_junction * 15.0  # Calculate cross-sectional area based on combined width
-
-    # Update downstream (outflow) section
-    A_out, Q_out = update_river(A_out, Q_out, h_out, dx, dt, nx_out)
-
 
 def fric_slope (Q, A, h):
     return n_manning**2*Q*abs(Q) / (A**2*h**(4/3))
 
 # Functions to update each river based on the Saint-Venant equations
-def update_river(A, Q, h, dx, dt, nx):
+def update_river(A, Q, h, dx, dt, nx, B):
     # Constants
-    B = A/h  # channel width (m)
     L = dx*nx # Length of the channel (m)
-    S0 = 0    # channel bed slope
 
     # Boundary conditions
-    h_bc = 3  # fixed value for now, but can obtain thru loading input
-    Q_bc = 8  # fixed value for now, but can obtain thru loading input
-    A_bc = h_bc*B
-
-# n is the time step
-    h[0] = h_bc[n]
-    Q[0] = Q_bc[n]
-    A[0] = A_bc[n]
+    h[0] = 3  # fixed value for now, but can obtain thru loading input
+    Q[0] = 8
+    A[0] = h[0]*B
 
     h_new = np.copy(h)
     Q_new = np.copy(Q)
     A_new = np.copy(A)
 
-    for i in range(1, n_grid-1):
+    for i in range(1, nx-1):
 
         h_new[i] = (h[i+1] + h[i-1])/2 - (Q[i+1] - Q[i-1])/2/dx*dt/B  # Lax-Friedrichs method (central finite difference approximation)
 
@@ -96,3 +74,25 @@ def update_river(A, Q, h, dx, dt, nx):
     h = np.copy(h_new)
     Q = np.copy(Q_new)
     A = np.copy(A_new)
+
+    return(A, Q)
+
+# Main time-stepping loop
+for t in range(300):  # Run for 300 time steps or more
+    # Update each river section
+    h_river1 = A_river1 / B_river1 
+    h_river2 = A_river2 / B_river2
+    h_out = A_out / B_out 
+
+    # Update both rivers separately
+    A_river1, Q_river1 = update_river(A_river1, Q_river1, h_river1, dx, dt, nx_river1, B_river1)
+    A_river2, Q_river2 = update_river(A_river2, Q_river2, h_river2, dx, dt, nx_river2, B_river2)
+
+    # Apply confluence/junction conditions
+    Q_out[0] = Q_river1[-1] + Q_river2[-1]
+    h_junction = (h_river1[-1] + h_river2[-1]) / 2  # Average water level at junction
+    A_out[0] = h_junction * 15.0  # Calculate cross-sectional area based on combined width
+
+    # Update downstream (outflow) section
+    A_out, Q_out = update_river(A_out, Q_out, h_out, dx, dt, nx_out, B_out)
+
