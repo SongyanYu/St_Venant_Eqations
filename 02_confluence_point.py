@@ -5,6 +5,7 @@
 #---
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 # Genenral constants
 g = 9.81  # Gravitational acceleration (m/s^2)
@@ -37,7 +38,7 @@ def fric_slope (Q, A, h):
 # Functions to update each river based on the Saint-Venant equations
 def update_river(A, Q, h, dx, dt, nx, B):
     # Constants
-    L = dx*nx # Length of the channel (m)
+    #L = dx*nx # Length of the channel (m)
 
     # Boundary conditions
     h[0] = 3  # fixed value for now, but can obtain thru loading input
@@ -96,3 +97,10 @@ for t in range(300):  # Run for 300 time steps or more
     # Update downstream (outflow) section
     A_out, Q_out = update_river(A_out, Q_out, h_out, dx, dt, nx_out, B_out)
 
+    if t % 30 == 0:
+        plt.plot(A_out/B_out, label = f'time = {t} s') 
+
+plt.xlabel('Position along the river channel')
+plt.ylabel('Water surface profile (m)')
+plt.legend()
+plt.show()
