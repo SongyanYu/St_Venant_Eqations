@@ -79,6 +79,9 @@ def update_river(A, Q, h, dx, dt, nx, B):
     return(A, Q)
 
 # Main time-stepping loop
+
+fig, (ax1,ax2) = plt.subplots(1,2)
+
 for t in range(300):  # Run for 300 time steps or more
     # Update each river section
     h_river1 = A_river1 / B_river1 
@@ -87,6 +90,8 @@ for t in range(300):  # Run for 300 time steps or more
 
     # Update both rivers separately
     A_river1, Q_river1 = update_river(A_river1, Q_river1, h_river1, dx, dt, nx_river1, B_river1)
+    if t <=2:
+        print(f'A_river1 : {A_river1}')
     A_river2, Q_river2 = update_river(A_river2, Q_river2, h_river2, dx, dt, nx_river2, B_river2)
 
     # Apply confluence/junction conditions
@@ -98,9 +103,14 @@ for t in range(300):  # Run for 300 time steps or more
     A_out, Q_out = update_river(A_out, Q_out, h_out, dx, dt, nx_out, B_out)
 
     if t % 30 == 0:
-        plt.plot(A_out/B_out, label = f'time = {t} s') 
+        ax1.plot(A_river1/B_river1, label=f'time = {t} s')
+        ax2.plot(A_out/B_out, label = f'time = {t} s') 
 
-plt.xlabel('Position along the river channel')
-plt.ylabel('Water surface profile (m)')
-plt.legend()
+ax1.legend()
+ax2.legend()
+ax1.xlabel('Position along the river channel')
+ax1.ylabel('Water surface profile (m)')
+ax2.xlabel('Position along the river channel')
+ax2.ylabel('Water surface profile (m)')
+#plt.legend()
 plt.show()
