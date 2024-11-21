@@ -108,9 +108,9 @@ for t in range(300):  # Run for 300 time steps or more
 
 ax1.legend()
 ax2.legend()
-ax1.xlabel('Position along the river channel')
-ax1.ylabel('Water surface profile (m)')
-ax2.xlabel('Position along the river channel')
-ax2.ylabel('Water surface profile (m)')
+ax1.set_xlabel('Position along the river channel')
+ax1.set_ylabel('Water surface profile (m)')
+ax2.set_xlabel('Position along the river channel')
+ax2.set_ylabel('Water surface profile (m)')
 #plt.legend()
 plt.show()
