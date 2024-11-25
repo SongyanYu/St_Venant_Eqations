@@ -41,9 +41,9 @@ def update_river(A, Q, h, dx, dt, nx, B):
     #L = dx*nx # Length of the channel (m)
 
     # Boundary conditions
-    h[0] = 3  # fixed value for now, but can obtain thru loading input
-    Q[0] = 8
-    A[0] = h[0]*B
+ #   h[0] = 3  # fixed value for now, but can obtain thru loading input
+ #   Q[0] = 8
+ #   A[0] = h[0]*B
 
     h_new = np.copy(h)
     Q_new = np.copy(Q)
@@ -80,31 +80,35 @@ def update_river(A, Q, h, dx, dt, nx, B):
 
 # Main time-stepping loop
 
-fig, (ax1,ax2) = plt.subplots(1,2)
+fig, (ax1,ax2,ax3) = plt.subplots(1,3)
 
-for t in range(300):  # Run for 300 time steps or more
+for t in range(3000):  # Run for 300 time steps or more
     # Update each river section
     h_river1 = A_river1 / B_river1 
     h_river2 = A_river2 / B_river2
     h_out = A_out / B_out 
 
     # Update both rivers separately
+    h_river1[0] = 2 - t*0.0005
     A_river1, Q_river1 = update_river(A_river1, Q_river1, h_river1, dx, dt, nx_river1, B_river1)
     if t <=2:
         print(f'A_river1 : {A_river1}')
+
+    h_river2[0] = 15/8 - t*0.0005
     A_river2, Q_river2 = update_river(A_river2, Q_river2, h_river2, dx, dt, nx_river2, B_river2)
 
     # Apply confluence/junction conditions
     Q_out[0] = Q_river1[-1] + Q_river2[-1]
     h_junction = (h_river1[-1] + h_river2[-1]) / 2  # Average water level at junction
-    A_out[0] = h_junction * 15.0  # Calculate cross-sectional area based on combined width
+    A_out[0] = h_junction * B_out  # Calculate cross-sectional area based on combined width
 
     # Update downstream (outflow) section
     A_out, Q_out = update_river(A_out, Q_out, h_out, dx, dt, nx_out, B_out)
 
-    if t % 30 == 0:
+    if t % 300 == 0:
         ax1.plot(A_river1/B_river1, label=f'time = {t} s')
-        ax2.plot(A_out/B_out, label = f'time = {t} s') 
+        ax2.plot(A_river2/B_river2, label=f'time = {t} s')
+        ax3.plot(A_out/B_out, label = f'time = {t} s') 
 
 ax1.legend()
 ax2.legend()
