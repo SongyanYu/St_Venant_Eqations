@@ -26,9 +26,9 @@ S0 = 0    # channel bed slope
 # Initialize variables
 A_river1 = np.ones(nx_river1) * 20.0  # Cross-sectional area (m²)
 Q_river1 = np.ones(nx_river1) * 5.0   # Discharge (m³/s)
-A_river2 = np.ones(nx_river2) * 15.0
+A_river2 = np.ones(nx_river2) * 16.0
 Q_river2 = np.ones(nx_river2) * 4.0
-A_out = np.ones(nx_out) * 30.0
+A_out = np.ones(nx_out) * 25
 Q_out = np.zeros(nx_out)
 
 
@@ -91,10 +91,8 @@ for t in range(3000):  # Run for 300 time steps or more
     # Update both rivers separately
     h_river1[0] = 2 - t*0.0005
     A_river1, Q_river1 = update_river(A_river1, Q_river1, h_river1, dx, dt, nx_river1, B_river1)
-    if t <=2:
-        print(f'A_river1 : {A_river1}')
 
-    h_river2[0] = 15/8 - t*0.0005
+    h_river2[0] = 16/8 - t*0.0005
     A_river2, Q_river2 = update_river(A_river2, Q_river2, h_river2, dx, dt, nx_river2, B_river2)
 
     # Apply confluence/junction conditions
